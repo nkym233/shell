@@ -1,4 +1,5 @@
 #!/bin/bash
+# 默认安装4.34.0版本
 # 南柯一梦 WEJ.CC
 bash <(curl -L https://git.wej.cc/https://github.com/nkym233/shell/blob/4dd3260f6d50814adb25edd912786114b54a272d/v2ray-install.sh) --version 4.34.0
 sleep 1
@@ -19,4 +20,3 @@ sleep 1
 echo "vmess://ew0KICAidiI6ICIyIiwNCiAgInBzIjogInYycmF5IiwNCiAgImFkZCI6ICIxLjEuMS4xIiwNCiAgInBvcnQiOiAiODAiLA0KICAiaWQiOiAiYWJjZCIsDQogICJhaWQiOiAiMCIsDQogICJzY3kiOiAiYXV0byIsDQogICJuZXQiOiAidGNwIiwNCiAgInR5cGUiOiAiaHR0cCIsDQogICJob3N0IjogIiIsDQogICJwYXRoIjogIi8iLA0KICAidGxzIjogIiIsDQogICJzbmkiOiAiIiwNCiAgImFscG4iOiAiIg0KfQ=="
 echo "复制以上链接导入，自行修改ip地址、端口、uuid"
 echo "输入systemctl status v2ray，可查看状态"
-done
