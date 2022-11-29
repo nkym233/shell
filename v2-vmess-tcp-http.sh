@@ -16,4 +16,7 @@ cat /usr/local/etc/v2ray/config.json
 systemctl enable v2ray && systemctl restart v2ray
 echo "v2ray已安装并添加到自启"
 sleep 1
+echo "vmess://ew0KICAidiI6ICIyIiwNCiAgInBzIjogInYycmF5IiwNCiAgImFkZCI6ICIxLjEuMS4xIiwNCiAgInBvcnQiOiAiODAiLA0KICAiaWQiOiAiYWJjZCIsDQogICJhaWQiOiAiMCIsDQogICJzY3kiOiAiYXV0byIsDQogICJuZXQiOiAidGNwIiwNCiAgInR5cGUiOiAiaHR0cCIsDQogICJob3N0IjogIiIsDQogICJwYXRoIjogIi8iLA0KICAidGxzIjogIiIsDQogICJzbmkiOiAiIiwNCiAgImFscG4iOiAiIg0KfQ=="
+echo "复制以上链接导入，自行修改ip地址、端口、uuid"
 echo "输入systemctl status v2ray，可查看状态"
+done
