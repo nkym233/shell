@@ -1,5 +1,8 @@
 #!/bin/bash
 #南柯一梦 WEJ.CC & YAOHUO.ME
+echo .
+echo .
+sleep 1s
 echo "N1搭建青龙脚本-2.10.13"
 read -p "Please enter the port请输入自定义青龙端口并回车：" uport
 echo "已设置青龙端口为：$uport"
