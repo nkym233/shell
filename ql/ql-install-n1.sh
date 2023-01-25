@@ -1,11 +1,7 @@
 #!/bin/bash
 #南柯一梦 WEJ.CC & YAOHUO.ME
-sleep 1s
-echo .
-echo .
-echo .
-echo "N1搭建青龙脚本-2.10.13"
-read -p "Please enter the port请输入自定义青龙端口并回车：" uport
+echo -e "\033[34m N1搭建青龙脚本-2.10.13 \033[0m"
+read -p "请输入自定义青龙端口并回车：" uport
 echo "已设置青龙端口为：$uport"
 docker run -dit \
   -v /mnt/mmcblk2p4/ql/config:/ql/config \
