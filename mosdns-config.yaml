@@ -82,12 +82,14 @@ plugins:
         # 已知的本地域名用本地服务器解析
         - if: query_is_local_domain
           exec:
+            - _prefer_ipv4
             - forward_local
             - _return
 
         # 已知的非本地域名用远程服务器解析
         - if: query_is_non_local_domain
           exec:
+            - _prefer_ipv4
             - forward_remote
             - _return
 
@@ -96,6 +98,7 @@ plugins:
           # 的工作流程。
           # primary 从本地服务器获取应答，丢弃非本地 IP 的结果。
         - primary:
+            - _prefer_ipv4
             - forward_local
             - if: "(! response_has_local_ip) && [_response_valid_answer]"
             # - if: "[_response_valid_answer]"
