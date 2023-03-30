@@ -57,6 +57,7 @@ if [ "$(docker container ls -f "name=nginx" -q)" ]; then
   
   ip=$(retrieve_ip_address)
   echo "请打开浏览器访问 http://${ip}:${port:-8080} ."
+  echo "如果是在服务器搭建则访问公网ip:端口"
 else
   echo "Failed to install Nginx. Please check the Docker installation and try again."
 fi
