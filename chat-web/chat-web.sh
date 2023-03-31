@@ -4,7 +4,7 @@ SCRIPT_NAME=$(basename "$0")
 NGINX_ROOT="/root/nginx"
 INDEX_HTML_URL="https://raw.githubusercontent.com/xqdoo00o/chatgpt-web/main/index.html"
 DEFAULT_CONF_URL="https://raw.githubusercontent.com/nkym233/shell/main/chat-web/default.conf"
-OPENAI_API_END_POINT="https://chat-api.wej.cc/v1/chat/completions"
+OPENAI_API_END_POINT="https://api.swesa.cn/v1/chat/completions"
 
 help() {
   echo "Usage: ./${SCRIPT_NAME} [OPTIONS]"
