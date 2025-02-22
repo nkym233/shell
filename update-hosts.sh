@@ -30,19 +30,19 @@ log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
 
-# 使用dig和nslookup查询IP的函数
+# 使用nslookup和ping查询IP的函数
 get_ip_address() {
     local domain=$1
     local ip=""
     
-    # 首先尝试使用dig
-    if command -v dig &> /dev/null; then
-        ip=$(dig +short "$domain" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+    # 首先尝试使用nslookup
+    if command -v nslookup &> /dev/null; then
+        ip=$(nslookup "$domain" | awk '/^Address: / { print $2 }' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
     fi
     
-    # 如果dig失败，尝试使用nslookup
-    if [ -z "$ip" ] && command -v nslookup &> /dev/null; then
-        ip=$(nslookup "$domain" | awk '/^Address: / { print $2 }' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+    # 如果nslookup失败，使用ping作为备选方案
+    if [ -z "$ip" ] && command -v ping &> /dev/null; then
+        ip=$(ping -W 1 -c 1 "$domain" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
     fi
     
     echo "$ip"
@@ -98,4 +98,4 @@ log_message "已清理临时文件"
 log_message "更新后的hosts文件内容："
 cat "$HOSTS_FILE" | tee -a "$LOG_FILE"
 
-log_message "域名解析IP更新完成!"
+log_message "脚本执行完成"
