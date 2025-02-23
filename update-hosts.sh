@@ -21,6 +21,7 @@ domains=(
     "promotion.waimai.meituan.com"
     "vip.mini189.cn"
     "ip.ddnspod.com"
+    "acs.m.taobao.com"
 )
 
 # 配置文件路径
