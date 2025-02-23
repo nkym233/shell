@@ -2,6 +2,7 @@
 
 # 设置日志文件
 LOG_FILE="/var/log/dns_update.log"
+echo "" > "$LOG_FILE"
 
 # 域名列表
 domains=(
@@ -19,6 +20,7 @@ domains=(
     "ihotel.meituan.com"
     "promotion.waimai.meituan.com"
     "vip.mini189.cn"
+    "ip.ddnspod.com"
 )
 
 # 配置文件路径
@@ -98,4 +100,4 @@ log_message "已清理临时文件"
 log_message "更新后的hosts文件内容："
 cat "$HOSTS_FILE" | tee -a "$LOG_FILE"
 
-log_message "脚本执行完成"
+log_message "域名解析IP更新完成"
