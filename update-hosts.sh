@@ -16,6 +16,7 @@ domains=(
     "wx.waimai.meituan.com"
     "api.maoyan.com"
     "cube.meituan.com"
+    "promoapi.meituan.com"
     "m.ctrip.com"
     "ihotel.meituan.com"
     "promotion.waimai.meituan.com"
