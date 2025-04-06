@@ -1,0 +1,52 @@
+name: Auto Download and Split China IP List
+
+on:
+  schedule:
+    - cron: '0 16 * * *'  # 每天UTC 16:00执行，对应中国时间24:00 (UTC+8)
+  push:
+    branches:
+      - main  # 推送到main分支时触发
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Download China IP list and check for changes
+        id: download
+        run: |
+          # 下载最新的中国IP列表
+          curl -L https://github.com/Loyalsoldier/geoip/raw/refs/heads/release/text/cn.txt -o cn.txt.new
+          
+          # 检查文件是否已存在
+          if [ -f "cn.txt" ]; then
+            # 比较文件是否有变化
+            if cmp -s "cn.txt" "cn.txt.new"; then
+              echo "文件没有变化，跳过更新"
+              echo "::set-output name=changed::false"
+              rm cn.txt.new
+              exit 0
+            fi
+          fi
+          
+          # 文件有变化，替换旧文件
+          mv cn.txt.new cn.txt
+          echo "::set-output name=changed::true"
+
+      - name: Split IP List into IPv4 and IPv6
+        if: steps.download.outputs.changed == 'true'
+        run: |
+          # 使用awk命令分割IP
+          awk '{if ($1 ~ /^[0-9]+\./) print $1 > "china_ipv4.txt"; else print $1 > "china_ipv6.txt"}' cn.txt
+
+      - name: Commit and push split files
+        if: steps.download.outputs.changed == 'true'
+        run: |
+          git config --global user.name "nkym233"
+          git config --global user.email "mail@wej.cc"
+          git add cn.txt china_ipv4.txt china_ipv6.txt
+          git commit -m "Auto split China IP list into IPv4 and IPv6 files"
+          git push origin main
