@@ -26,7 +26,7 @@ jobs:
             # 比较文件是否有变化
             if cmp -s "cn.txt" "cn.txt.new"; then
               echo "文件没有变化，跳过更新"
-              echo "::set-output name=changed::false"
+              echo "changed=false" >> $GITHUB_OUTPUT
               rm cn.txt.new
               exit 0
             fi
@@ -34,7 +34,7 @@ jobs:
           
           # 文件有变化，替换旧文件
           mv cn.txt.new cn.txt
-          echo "::set-output name=changed::true"
+          echo "changed=true" >> $GITHUB_OUTPUT
 
       - name: Split IP List into IPv4 and IPv6
         if: steps.download.outputs.changed == 'true'
