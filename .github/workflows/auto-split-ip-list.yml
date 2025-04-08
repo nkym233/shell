@@ -1,52 +1,110 @@
-name: Auto Download and Split China IP List
+name: Auto Download and Format China IP List for nftables
 
 on:
   schedule:
-    - cron: '0 16 * * *'  # 每天UTC 16:00执行，对应中国时间24:00 (UTC+8)
+    - cron: '0 16 * * *'  # 每天UTC 16:00执行，对应中国时间 00:00 (UTC+8)
   push:
     branches:
       - main  # 推送到main分支时触发
   workflow_dispatch:  # 允许手动触发
 
 jobs:
-  split:
+  update_and_format: # 作业名称可以更清晰
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4 # 建议使用较新版本的 action
 
       - name: Download China IP list and check for changes
         id: download
         run: |
-          # 下载最新的中国IP列表
-          curl -L https://github.com/Loyalsoldier/geoip/raw/refs/heads/release/text/cn.txt -o cn.txt.new
-          
-          # 检查文件是否已存在
+          echo "Downloading latest China IP list..."
+          # 使用 --fail 让 curl 在下载失败时返回错误码
+          curl -L https://github.com/Loyalsoldier/geoip/raw/refs/heads/release/text/cn.txt -o cn.txt.new --fail || { echo "Download failed"; exit 1; }
+
+          # 检查本地 cn.txt 文件是否存在
           if [ -f "cn.txt" ]; then
-            # 比较文件是否有变化
+            # 比较文件是否有变化 (-s 表示静默模式)
             if cmp -s "cn.txt" "cn.txt.new"; then
-              echo "文件没有变化，跳过更新"
+              echo "IP list has not changed. Skipping update."
               echo "changed=false" >> $GITHUB_OUTPUT
-              rm cn.txt.new
-              exit 0
+              rm cn.txt.new # 删除下载的新文件
+              exit 0 # 正常退出当前步骤
+            else
+               echo "IP list has changed."
             fi
+          else
+            echo "Local cn.txt not found. Will create new files."
+            # 即使本地没有旧文件，也标记为 changed=true 以便生成 .nft 文件
           fi
-          
-          # 文件有变化，替换旧文件
+
+          # 文件有变化或本地不存在旧文件，替换/创建 cn.txt
           mv cn.txt.new cn.txt
           echo "changed=true" >> $GITHUB_OUTPUT
 
-      - name: Split IP List into IPv4 and IPv6
+      - name: Format IP List for nftables
+        # 仅当 download 步骤的输出 changed 为 'true' 时运行
         if: steps.download.outputs.changed == 'true'
         run: |
-          # 使用awk命令分割IP
-          awk '{if ($1 ~ /^[0-9]+\./) print $1 > "china_ipv4.txt"; else print $1 > "china_ipv6.txt"}' cn.txt
+          echo "Formatting IP list into nftables sets..."
 
-      - name: Commit and push split files
+          # 定义输出文件名
+          NFT_V4_FILE="cnip_v4.nft"
+          NFT_V6_FILE="cnip_v6.nft"
+          TMP_V4_FILE="ipv4.tmp" # 临时文件
+          TMP_V6_FILE="ipv6.tmp" # 临时文件
+
+          # 1. 使用 awk 分割 IP 到临时文件 (增加 !/^$/ 避免处理空行)
+          awk '!/^$/ {if ($1 ~ /^[0-9]+\./) print $1 > "'"$TMP_V4_FILE"'"; else print $1 > "'"$TMP_V6_FILE"'"}' cn.txt
+
+          # 2. 创建 cnip_v4.nft
+          echo "Creating $NFT_V4_FILE..."
+          # 写入 nftables set 头部，使用 printf 更精确控制换行
+          printf "set cnip_v4 {\n\ttype ipv4_addr\n\tflags interval\n\tauto-merge\n\telements = {\n" > "$NFT_V4_FILE"
+          # 检查临时文件是否存在且非空，然后处理并附加 IPs
+          if [ -s "$TMP_V4_FILE" ]; then
+              # 读取临时文件，为每行添加缩进和逗号，然后附加到 .nft 文件
+              awk '{print "\t" $1 ","}' "$TMP_V4_FILE" >> "$NFT_V4_FILE"
+              # 使用 sed 删除最后一个 IP 地址行末尾多余的逗号
+              sed -i '$ s/,$//' "$NFT_V4_FILE"
+          fi
+          # 写入文件尾部
+          printf "\n\t}\n}\n" >> "$NFT_V4_FILE"
+          echo "$NFT_V4_FILE created."
+
+          # 3. 创建 cnip_v6.nft
+          echo "Creating $NFT_V6_FILE..."
+          # 写入 nftables set 头部
+          printf "set cnip_v6 {\n\ttype ipv6_addr\n\tflags interval\n\tauto-merge\n\telements = {\n" > "$NFT_V6_FILE"
+          # 检查临时文件是否存在且非空，然后处理并附加 IPs
+          if [ -s "$TMP_V6_FILE" ]; then
+              # 读取临时文件，为每行添加缩进和逗号，然后附加到 .nft 文件
+              awk '{print "\t" $1 ","}' "$TMP_V6_FILE" >> "$NFT_V6_FILE"
+              # 使用 sed 删除最后一个 IP 地址行末尾多余的逗号
+              sed -i '$ s/,$//' "$NFT_V6_FILE"
+          fi
+          # 写入文件尾部
+          printf "\n\t}\n}\n" >> "$NFT_V6_FILE"
+          echo "$NFT_V6_FILE created."
+
+          # 4. 清理临时文件
+          rm -f "$TMP_V4_FILE" "$TMP_V6_FILE"
+          echo "Temporary files removed."
+
+      - name: Commit and push nftables sets
+        # 仅当 download 步骤的输出 changed 为 'true' 时运行
         if: steps.download.outputs.changed == 'true'
         run: |
-          git config --global user.name "nkym233"
-          git config --global user.email "mail@wej.cc"
-          git add cn.txt china_ipv4.txt china_ipv6.txt
-          git commit -m "Auto split China IP list into IPv4 and IPv6 files"
-          git push origin main
+          git config --global user.name "nkym233" # 建议替换为 GitHub Actions Bot 或你的特定 Bot 名称
+          git config --global user.email "mail@wej.cc" # 建议替换为对应的邮箱或 noreply 邮箱
+          # 添加所有需要的文件
+          git add cn.txt cnip_v4.nft cnip_v6.nft
+
+          # 检查是否有实际的文件变动需要提交
+          # git diff --staged --quiet 会在有暂存更改时返回 1，没有则返回 0
+          if ! git diff --staged --quiet; then
+            git commit -m "Update China IP list and generate nftables sets (cnip_v4.nft, cnip_v6.nft)"
+            git push origin main
+          else
+            echo "No changes detected in tracked files to commit."
+          fi
