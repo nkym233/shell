@@ -1,4 +1,8 @@
-add element inet xray cnip_v4 {
+set cnip_v4 {
+	type ipv4_addr
+	flags interval
+	auto-merge
+	elements = {
 	1.0.1.0/24,
 	1.0.2.0/23,
 	1.0.8.0/21,
@@ -7341,4 +7345,5 @@ add element inet xray cnip_v4 {
 	223.255.236.0/22,
 	223.255.252.0/23
 
+	}
 }

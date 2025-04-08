@@ -1,4 +1,8 @@
-add element inet xray cnip_v6 {
+set cnip_v6 {
+	type ipv6_addr
+	flags interval
+	auto-merge
+	elements = {
 	2001:250::/30,
 	2001:254::/31,
 	2001:256::/32,
@@ -12353,5 +12357,5 @@ add element inet xray cnip_v6 {
 	2c0f:f7a8:9041::/48,
 	2c0f:f7a8:9210::/47,
 	2c0f:f7a8:9220::/48
-
+	}
 }
