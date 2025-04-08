@@ -62,7 +62,7 @@ jobs:
               awk '{print "\t" $1 ","}' "$TXT_V4_FILE" >> "$NFT_V4_FILE"
               sed -i '$ s/,$//' "$NFT_V4_FILE" # 移除最后一个元素的逗号
           fi
-          printf "\n\t}\n}\n" >> "$NFT_V4_FILE"
+          printf "\t}\n}\n" >> "$NFT_V4_FILE"
           echo "$NFT_V4_FILE created."
 
           # Create cnip_v6.nft
