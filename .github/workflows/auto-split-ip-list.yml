@@ -1,4 +1,4 @@
-name: Auto Download, Split (TXT), and Format (NFT) China IP List
+name: Auto Download, Split (TXT), and Format (NFT - add element) China IP List
 
 on:
   schedule:
@@ -9,7 +9,7 @@ on:
   workflow_dispatch:  # 允许手动触发
 
 jobs:
-  update_split_format: # 作业名称反映所有操作
+  update_split_format:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -37,8 +37,7 @@ jobs:
           mv cn.txt.new cn.txt
           echo "changed=true" >> $GITHUB_OUTPUT
 
-      - name: Split IPs to TXT and Format to NFT
-        # 仅当 download 步骤的输出 changed 为 'true' 时运行
+      - name: Split IPs to TXT and Format to NFT (add element)
         if: steps.download.outputs.changed == 'true'
         run: |
           echo "Processing IP list..."
@@ -51,44 +50,51 @@ jobs:
           awk '!/^$/ {if ($1 ~ /^[0-9]+\./) print $1 > "'"$TXT_V4_FILE"'"; else print $1 > "'"$TXT_V6_FILE"'"}' cn.txt
           echo "TXT splitting complete."
 
-          # --- 2. Format into NFT files (reading from TXT files) ---
+          # --- 2. Format into NFT files using 'add element' ---
           NFT_V4_FILE="cnip_v4.nft"
           NFT_V6_FILE="cnip_v6.nft"
+          TABLE_NAME="inet xray" # 定义 Table 名称，方便修改
 
-          # Create cnip_v4.nft
+          # Create cnip_v4.nft with 'add element'
           echo "Creating $NFT_V4_FILE..."
-          printf "set cnip_v4 {\n\ttype ipv4_addr\n\tflags interval\n\tauto-merge\n\telements = {\n" > "$NFT_V4_FILE"
-          if [ -s "$TXT_V4_FILE" ]; then # 检查源 TXT 文件是否存在且非空
+          # 修改头部为 'add element' 格式
+          printf "add element %s cnip_v4 {\n" "$TABLE_NAME" > "$NFT_V4_FILE"
+          if [ -s "$TXT_V4_FILE" ]; then
+              # 追加 IP 列表，每行带缩进和逗号
               awk '{print "\t" $1 ","}' "$TXT_V4_FILE" >> "$NFT_V4_FILE"
-              sed -i '$ s/,$//' "$NFT_V4_FILE" # 移除最后一个元素的逗号
+              # 移除文件最后一行（即最后一个IP）末尾的逗号
+              sed -i '$ s/,$//' "$NFT_V4_FILE"
           fi
-          printf "\n\t}\n}\n" >> "$NFT_V4_FILE"
+          # 修改尾部：移除开头的 \n，只添加一个 }，并在其前加 \n 换行
+          printf "\n}\n" >> "$NFT_V4_FILE"
           echo "$NFT_V4_FILE created."
 
-          # Create cnip_v6.nft
+          # Create cnip_v6.nft with 'add element'
           echo "Creating $NFT_V6_FILE..."
-          printf "set cnip_v6 {\n\ttype ipv6_addr\n\tflags interval\n\tauto-merge\n\telements = {\n" > "$NFT_V6_FILE"
-          if [ -s "$TXT_V6_FILE" ]; then # 检查源 TXT 文件是否存在且非空
+          # 修改头部为 'add element' 格式
+          printf "add element %s cnip_v6 {\n" "$TABLE_NAME" > "$NFT_V6_FILE"
+          if [ -s "$TXT_V6_FILE" ]; then
+              # 追加 IP 列表，每行带缩进和逗号
               awk '{print "\t" $1 ","}' "$TXT_V6_FILE" >> "$NFT_V6_FILE"
-              sed -i '$ s/,$//' "$NFT_V6_FILE" # 移除最后一个元素的逗号
+              # 移除文件最后一行（即最后一个IP）末尾的逗号
+              sed -i '$ s/,$//' "$NFT_V6_FILE"
           fi
-          printf "\n\t}\n}\n" >> "$NFT_V6_FILE"
+          # 修改尾部：移除开头的 \n，只添加一个 }，并在其前加 \n 换行
+          printf "\n}\n" >> "$NFT_V6_FILE"
           echo "$NFT_V6_FILE created."
 
           echo "NFT formatting complete."
 
       - name: Commit and push generated files
-        # 仅当 download 步骤的输出 changed 为 'true' 时运行
         if: steps.download.outputs.changed == 'true'
         run: |
           git config --global user.name "nkym233" # Or GitHub Actions Bot name
           git config --global user.email "mail@wej.cc" # Or associated email
-          # 添加所有相关文件
           git add cn.txt china_ipv4.txt china_ipv6.txt cnip_v4.nft cnip_v6.nft
 
-          # 检查是否有实际的文件变动需要提交
           if ! git diff --staged --quiet; then
-            git commit -m "Update China IP list and generate TXT/NFT formats"
+            # 更新 Commit message 以反映新的 NFT 格式
+            git commit -m "Update China IP list and generate TXT/NFT (add element) formats"
             git push origin main
           else
             echo "No changes detected in tracked files to commit."
